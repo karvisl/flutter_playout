@@ -156,7 +156,7 @@ class VideoPlayer: NSObject, FlutterPlugin, FlutterStreamHandler, FlutterPlatfor
                 self.subtitle = parsedData["subtitle"] as! String
                 self.isLiveStream = parsedData["isLiveStream"] as! Bool
                 self.showControls = parsedData["showControls"] as! Bool
-                self.position = parsedData["position"] as! Double
+//                 self.position = parsedData["position"] as! Double
 
                 self.onMediaChanged()
 
