@@ -22,6 +22,7 @@
         </service>
 
         <receiver
+            android:exported="false"
             android:name=".audio.RemoteReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
@@ -29,6 +30,7 @@
         </receiver>
 
         <receiver
+            android:exported="false"      
             android:name=".video.RemoteReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
