@@ -22,23 +22,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MergingMediaSource;
-import com.google.android.exoplayer2.source.SingleSampleMediaSource;
-import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
-import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
@@ -47,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.List;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
@@ -70,14 +65,14 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
      * The notification id.
      */
     private static final int NOTIFICATION_ID = 0;
-    public static SimpleExoPlayer activePlayer;
+    public static ExoPlayer activePlayer;
     private final String TAG = "PlayerLayout";
     /**
-     * Reference to the {@link SimpleExoPlayer}
+     * Reference to the {@link ExoPlayer}
      */
-    SimpleExoPlayer mPlayerView;
+    ExoPlayer mPlayerView;
     boolean isBound = true;
-    private PlayerLayout instance;
+    final PlayerLayout instance;
     /**
      * The underlying {@link MediaSessionCompat}.
      */
@@ -89,17 +84,17 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
     /**
      * App main activity
      */
-    private Activity activity;
-    private int viewId;
+    final Activity activity;
+    final int viewId;
 
     private DefaultTrackSelector trackSelector;
 
     /**
      * Context
      */
-    private Context context;
+    final Context context;
 
-    private BinaryMessenger messenger;
+    final BinaryMessenger messenger;
 
     private String url = "";
 
@@ -133,7 +128,7 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
     /**
      * The {@link ServiceConnection} serves as glue between this activity and the {@link MediaNotificationManagerService}.
      */
-    private ServiceConnection mMediaNotificationManagerServiceConnection = new ServiceConnection() {
+    private final ServiceConnection mMediaNotificationManagerServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
 
@@ -149,10 +144,10 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
             mMediaNotificationManagerService = null;
         }
     };
-
-    public PlayerLayout(Context context) {
-        super(context);
-    }
+//
+//    public PlayerLayout(Context context) {
+//        super();
+//    }
 
     public PlayerLayout(@NonNull Context context,
                         Activity activity,
@@ -160,7 +155,7 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
                         int id,
                         Object arguments) {
 
-        super(context);
+        super(context, activity, id, messenger, arguments);
 
         this.activity = activity;
 
@@ -230,7 +225,7 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
                         .setPreferredAudioLanguage(this.preferredAudioLanguage)
                         .setPreferredTextLanguage(this.preferredTextLanguage));
 
-        mPlayerView = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
+        mPlayerView = new ExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
 
         mPlayerView.setPlayWhenReady(this.autoPlay);
 
@@ -245,11 +240,11 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
             mPlayerView.seekTo(this.position * 1000);
         }
 
-        setUseController(showControls);
+//        setUseController(showControls);
 
         listenForPlayerTimeChange();
 
-        this.setPlayer(mPlayerView);
+//        this.setPlayer(mPlayerView);
 
         new EventChannel(
                 messenger,
@@ -272,8 +267,8 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
         mMediaSessionCompat = new MediaSessionCompat(context,
                 PlayerLayout.class.getSimpleName(), receiver, null);
 
-        mMediaSessionCompat.setFlags(MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-                | MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS);
+//        mMediaSessionCompat.setFlags(MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+//                | MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS);
 
         mMediaSessionCompat.setCallback(new MediaSessionCallback());
 
@@ -415,7 +410,7 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
 
     private void cleanPlayerNotification() {
         NotificationManager notificationManager = (NotificationManager)
-                getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                this.context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (notificationManager != null) {
 
@@ -499,8 +494,7 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
 
     private void updateMediaSource() {
         /* Produces DataSource instances through which media data is loaded. */
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
-                Util.getUserAgent(context, "flutter_playout"));
+        DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
 
         /* This is the MediaSource representing the media to be played. */
         MediaSource videoSource;
@@ -509,12 +503,14 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
          * https://tools.ietf.org/html/rfc8216
          */
         if(this.url.contains(".m3u8") || this.url.contains(".m3u")) {
-            videoSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(this.url));
+            videoSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(this.url)));
         } else {
-            videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(this.url));
+            videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(this.url)));
         }
 
-        mPlayerView.prepare(withSubtitles(dataSourceFactory, videoSource));
+        mPlayerView.prepare();
+        mPlayerView.setMediaSource(videoSource);
+//        mPlayerView.prepare(withSubtitles(dataSourceFactory, videoSource));
     }
 
     /**
@@ -533,19 +529,19 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
 
                     JSONObject subtitle = this.subtitles.getJSONObject(i);
 
-                    Format subtitleFormat =
-                            Format.createTextSampleFormat(
-                                    /* id= */ null,
-                                    subtitle.getString("mimeType"),
-                                    C.SELECTION_FLAG_DEFAULT,
-                                    subtitle.getString("languageCode"));
+//                    Format subtitleFormat =
+//                            Format.createTextSampleFormat(
+//                                    /* id= */ null,
+//                                    subtitle.getString("mimeType"),
+//                                    C.SELECTION_FLAG_DEFAULT,
+//                                    subtitle.getString("languageCode"));
 
-                    MediaSource subtitleMediaSource =
-                            new SingleSampleMediaSource.Factory(dataSourceFactory)
-                                    .createMediaSource(Uri.parse(subtitle.getString("uri")),
-                                            subtitleFormat, C.TIME_UNSET);
-
-                    source = new MergingMediaSource(source, subtitleMediaSource);
+//                    MediaSource subtitleMediaSource =
+//                            new SingleSampleMediaSource.Factory(dataSourceFactory)
+//                                    .createMediaSource(Uri.parse(subtitle.getString("uri")),
+//                                            subtitleFormat, C.TIME_UNSET);
+//
+//                    source = new MergingMediaSource(source, subtitleMediaSource);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -583,7 +579,8 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
 
                 boolean sc = Boolean.parseBoolean(args.get("showControls").toString());
 
-                setUseController(sc);
+                this.showControls = sc;
+//                setUseController(sc);
             }
 
         } catch (Exception e) { /* ignore */ }
@@ -767,12 +764,12 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
         }
 
         @Override
-        public void onPlayerError(EventTime eventTime, ExoPlaybackException error) {
+        public void onPlayerError(EventTime eventTime, PlaybackException error) {
 
             try {
 
-                final String errorMessage = "ExoPlaybackException Type [" + error.type + "] " +
-                        error.getSourceException().getCause().getMessage();
+                final String errorMessage = "ExoPlaybackException Type [" + error.getMessage() + "] " +
+                        error.getCause().getMessage();
 
                 JSONObject message = new JSONObject();
 

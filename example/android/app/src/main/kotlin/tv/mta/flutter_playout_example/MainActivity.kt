@@ -1,13 +1,18 @@
 package tv.mta.flutter_playout_example
-
-import android.os.Bundle
-
-import io.flutter.app.FlutterActivity
+import io.flutter.embedding.android.FlutterActivity
+import androidx.annotation.NonNull
+import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.GeneratedPluginRegistrant
+import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    GeneratedPluginRegistrant.registerWith(this)
-  }
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine);
+        MethodChannel(flutterEngine.dartExecutor,"flutter/MethodChannelDemo").setMethodCallHandler {
+            call, result ->
+            if (call.method == "") {
+
+            }
+        }
+    }
 }
