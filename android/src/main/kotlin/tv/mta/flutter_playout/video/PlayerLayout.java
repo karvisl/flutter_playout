@@ -552,9 +552,9 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
          * https://tools.ietf.org/html/rfc8216
          */
         if(this.url.contains(".m3u8") || this.url.contains(".m3u")) {
-            videoSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(this.url));
+            videoSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(this.url)));
         } else {
-            videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(this.url));
+            videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(this.url)));
         }
 
         mPlayerView.prepare(withSubtitles(dataSourceFactory, videoSource));
