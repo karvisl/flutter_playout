@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_playout/player_state.dart';
-import 'package:flutter_playout_example/audio.dart';
-import 'package:flutter_playout_example/video.dart';
+
+import 'audio.dart';
+import 'video.dart';
 
 void main() => runApp(MainApp());
 

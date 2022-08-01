@@ -103,9 +103,11 @@ class _AudioPlayout extends State<AudioPlayout> with PlayerObserver {
 
   @override
   void onTime(int position) {
-    setState(() {
-      currentPlaybackPosition = Duration(seconds: position);
-    });
+    if (position != null) {
+      setState(() {
+        currentPlaybackPosition = Duration(seconds: position);
+      });
+    }
   }
 
   @override
@@ -115,15 +117,17 @@ class _AudioPlayout extends State<AudioPlayout> with PlayerObserver {
 
   @override
   void onDuration(int duration) {
-    if (duration <= 0) {
-      setState(() {
-        _isLive = true;
-      });
-    } else {
-      setState(() {
-        _isLive = false;
-        this.duration = Duration(milliseconds: duration);
-      });
+    if (duration != null) {
+      if (duration <= 0) {
+        setState(() {
+          _isLive = true;
+        });
+      } else {
+        setState(() {
+          _isLive = false;
+          this.duration = Duration(milliseconds: duration);
+        });
+      }
     }
   }
 
@@ -235,8 +239,7 @@ class _AudioPlayout extends State<AudioPlayout> with PlayerObserver {
                 )
               : Slider(
                   activeColor: Colors.white,
-                  value: currentPlaybackPosition?.inMilliseconds?.toDouble() ??
-                      0.0,
+                  value: currentPlaybackPosition.inMilliseconds.toDouble(),
                   onChanged: (double value) {
                     seekTo(value);
                   },
@@ -281,7 +284,7 @@ class _AudioPlayout extends State<AudioPlayout> with PlayerObserver {
     // here we send position in case user has scrubbed already before hitting
     // play in which case we want playback to start from where user has
     // requested
-    _audioPlayer.play(widget.url,
+    _audioPlayer?.play(widget.url,
         title: widget.title,
         subtitle: widget.subtitle,
         position: currentPlaybackPosition,
@@ -290,13 +293,13 @@ class _AudioPlayout extends State<AudioPlayout> with PlayerObserver {
 
   // Request audio pause
   Future<void> pause() async {
-    _audioPlayer.pause();
+    _audioPlayer?.pause();
     setState(() => audioPlayerState = PlayerState.PAUSED);
   }
 
   // Request audio stop. this will also clear lock screen controls
   Future<void> stop() async {
-    _audioPlayer.reset();
+    _audioPlayer?.reset();
 
     setState(() {
       audioPlayerState = PlayerState.STOPPED;
@@ -309,13 +312,13 @@ class _AudioPlayout extends State<AudioPlayout> with PlayerObserver {
     setState(() {
       currentPlaybackPosition = Duration(milliseconds: milliseconds.toInt());
     });
-    _audioPlayer.seekTo(milliseconds / 1000);
+    _audioPlayer?.seekTo(milliseconds / 1000);
   }
 
   @override
   void dispose() {
     if (mounted) {
-      _audioPlayer.dispose();
+      _audioPlayer?.dispose();
     }
     super.dispose();
   }

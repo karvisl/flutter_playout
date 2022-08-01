@@ -6,7 +6,8 @@ import 'package:flutter_playout/multiaudio/MultiAudioSupport.dart';
 import 'package:flutter_playout/player_observer.dart';
 import 'package:flutter_playout/player_state.dart';
 import 'package:flutter_playout/video.dart';
-import 'package:flutter_playout_example/hls/getManifestLanguages.dart';
+
+import 'hls/getManifestLanguages.dart';
 
 class VideoPlayout extends StatefulWidget {
   final PlayerState desiredState;
@@ -21,7 +22,8 @@ class VideoPlayout extends StatefulWidget {
 
 class _VideoPlayoutState extends State<VideoPlayout>
     with PlayerObserver, MultiAudioSupport {
-  final String _url = null;
+  final String _url =
+      'https://moctobpltc-i.akamaihd.net/hls/live/571329/eight/playlist.m3u8';
   List<HLSManifestLanguage> _hlsLanguages = [];
 
   @override
@@ -46,18 +48,12 @@ class _VideoPlayoutState extends State<VideoPlayout>
           AspectRatio(
             aspectRatio: 16 / 9,
             child: Video(
-              autoPlay: true,
-              showControls: widget.showPlayerControls,
-              title: "MTA International",
-              subtitle: "Reaching The Corners Of The Earth",
-              preferredAudioLanguage: "eng",
-              isLiveStream: false,
-              position: 0,
-              url: _url,
-              onViewCreated: _onViewCreated,
               desiredState: widget.desiredState,
-              preferredTextLanguage: "en",
-              loop: false,
+              showControls: true,
+              isLiveStream: true,
+              url: _url,
+              autoPlay: true,
+              position: 0.0,
             ),
           ),
           /* multi language menu */
@@ -68,14 +64,14 @@ class _VideoPlayoutState extends State<VideoPlayout>
                     children: _hlsLanguages
                         .map((e) => MaterialButton(
                               child: Text(
-                                e.name,
+                                e.name ?? "",
                                 style: Theme.of(context)
                                     .textTheme
                                     .button
                                     .copyWith(color: Colors.white),
                               ),
                               onPressed: () {
-                                setPreferredAudioLanguage(e.code);
+                                setPreferredAudioLanguage(e.code ?? "eng");
                               },
                             ))
                         .toList(),

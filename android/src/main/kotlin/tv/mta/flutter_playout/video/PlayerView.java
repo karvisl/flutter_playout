@@ -25,7 +25,11 @@ public class PlayerView implements PlatformView, MethodChannel.MethodCallHandler
 
     @Override
     public View getView() {
-        return player.getView();
+        return player;
+    }
+
+    public void setActivity(Activity activity) {
+        player.setActivity(activity);
     }
 
     @Override
