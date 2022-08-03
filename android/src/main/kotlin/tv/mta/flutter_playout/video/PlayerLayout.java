@@ -513,14 +513,18 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
 
                     if (mPlayerView.isPlaying()) {
 
-                        JSONObject message = new JSONObject();
+                        if(eventSink !=  null){
+                            JSONObject message = new JSONObject();
 
-                        message.put("name", "onTime");
 
-                        message.put("time", mPlayerView.getCurrentPosition() / 1000);
+                            message.put("name", "onTime");
 
-                        Log.d(TAG, "onTime: [time=" + mPlayerView.getCurrentPosition() / 1000 + "]");
-                        eventSink.success(message);
+                            message.put("time", mPlayerView.getCurrentPosition() / 1000);
+
+                            Log.d(TAG, "onTime: [time=" + mPlayerView.getCurrentPosition() / 1000 + "]");
+                            eventSink.success(message);
+                        }
+
                     }
 
                 } catch (Exception e) {
@@ -857,14 +861,18 @@ public class PlayerLayout extends PlayerView implements FlutterAVPlayer, EventCh
                 if (playWhenReady) {
 
                     try {
-                        updatePlaybackState(PlayerState.PLAYING);
 
-                        JSONObject message = new JSONObject();
+                        if(eventSink != null){
+                            updatePlaybackState(PlayerState.PLAYING);
 
-                        message.put("name", "onPlay");
+                            JSONObject message = new JSONObject();
 
-                        Log.d(TAG, "onPlay: []");
-                        eventSink.success(message);
+                            message.put("name", "onPlay");
+
+                            Log.d(TAG, "onPlay: []");
+                            eventSink.success(message);
+                        }
+
                     } catch (Exception e) {
                         Log.e(TAG, "onPlay: ", e);
                     }
