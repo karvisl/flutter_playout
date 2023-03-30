@@ -181,7 +181,9 @@ class _VideoState extends State<Video> {
 
   @override
   void dispose() {
-    // _disposePlatformView(isDisposing: true);
+    if(Platform.isIOS){
+      _disposePlatformView(isDisposing: true);
+    }
     super.dispose();
   }
 
